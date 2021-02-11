@@ -7,7 +7,6 @@ class DNSMessage():
         self._authority: dict = dict()
         self._additional: dict = dict()
 
-
     @property
     def header(self):
         return self._header
@@ -27,3 +26,4 @@ class DNSMessage():
     @property
     def additional(self):
         return self._additional
+
