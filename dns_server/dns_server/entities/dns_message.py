@@ -1,7 +1,10 @@
+from entities.parts.dns_header import DNSHeader
+
+
 class DNSMessage():
     
     def __init__(self):
-        self._header: dict = dict()
+        self._header: DNSHeader = None
         self._question: dict = dict()
         self._answer: dict = dict()
         self._authority: dict = dict()
@@ -26,4 +29,3 @@ class DNSMessage():
     @property
     def additional(self):
         return self._additional
-
