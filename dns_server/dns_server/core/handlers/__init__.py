@@ -10,3 +10,7 @@ class AbstractHandler(ABC):
     @abstractmethod
     def handle(self):
         ...
+
+    @abstractmethod
+    def get_string(self):
+        ...

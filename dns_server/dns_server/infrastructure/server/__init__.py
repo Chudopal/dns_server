@@ -1,5 +1,6 @@
-import binascii
+import sys
 import socket
+import binascii
 
 
 def send_udp_message(message, address, port):
@@ -35,5 +36,34 @@ print(format_hex(response))
 
 
 class Server():
-    def __init__(self):
-        pass
+    def __init__(
+        self, 
+        host: int, 
+        port: str,
+        authority_host: int,
+        authority_port: str,
+    ):
+        self._host = host
+        self._port = port
+        self._authority_host = authority_host
+        self._authority_port = authority_port
+    
+    def run(self):
+        
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    
+
+        server_socket.bind((self._host,self._port))
+        try:
+            while 1:
+                data, addr = server_socket.recvfrom(1024)
+
+                #HERE WILL BE LOGIC
+
+                #p=DNSQuery(data)
+                #server_socket.sendto(p.respuesta(ip), addr)
+        except KeyboardInterrupt:
+            server_socket.close()
+
+
+
