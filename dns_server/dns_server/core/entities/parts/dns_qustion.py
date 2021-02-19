@@ -5,7 +5,7 @@ class DNSQuestion():
         "A": 0x01,      # IP-address
         "NS": 0x02,     # DNS-server
         "CNAME": 0x03,  # canonic name. www,example.com
-    }   
+    }
 
     _question_classes_in_hex: dict = {
         "IN": 0x0001,
