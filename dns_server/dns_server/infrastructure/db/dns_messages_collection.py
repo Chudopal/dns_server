@@ -1,2 +1,0 @@
-class DNSMessageCollection():
-    pass
