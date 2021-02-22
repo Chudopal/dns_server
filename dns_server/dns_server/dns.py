@@ -7,17 +7,10 @@ DNS_HOST = '8.8.8.8'
 DNS_PORT = 53
 
 
-class DNSQueryParser():
+class DNSMessage():
     def __init__(self, dns_message):
-        self._message = dns_message
-
-    @property
-    def message(self):
-        return message
-
-    @property
-    def response(self):
-        self,_build_response()
+        self._message: bytearray = dns_message
+        self._responce: bytearray = None
 
     def _build_response(self):
         """Generate answer for dns query
@@ -33,7 +26,13 @@ class DNSQueryParser():
         """
         return self._message[:2]
     
+    @property
+    def message(self) -> bytearray:
+        return self._message
 
+    @property
+    def response(self):
+        self,_build_response()
 
 
 def send_authority(message):
