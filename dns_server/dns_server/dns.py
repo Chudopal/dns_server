@@ -1,4 +1,10 @@
 import socket
+#from configuration import (
+#    HOST,
+#    PORT,
+#    DNS_HOST,
+#    DNS_PORT,
+#)
 
 
 HOST = '127.0.0.1'
@@ -25,14 +31,14 @@ class DNSMessage():
             list: 2 bytes for transaction id
         """
         return self._message[:2]
-    
+
     @property
     def message(self) -> bytearray:
         return self._message
 
     @property
     def response(self):
-        self,_build_response()
+        self._build_response()
 
 
 def send_authority(message):
@@ -54,5 +60,3 @@ while(True):
     print(data)
     dns_response = send_authority(message=data)
     sock.sendto(dns_response, addr)
-
-
