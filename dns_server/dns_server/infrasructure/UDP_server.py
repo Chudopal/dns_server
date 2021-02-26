@@ -20,16 +20,22 @@ import socket
 class DNSMessage():
     """Entity for dns message
     """
-
     def __init__(self, dns_message):
         self._message: bytearray = dns_message
-        self._responce: bytearray = None
+        self._responce: bytearray = self._build_response()
 
     def _build_response(self):
         """Generate answer for dns query
         """
         # Transaction ID
         transaction_id = self._get_transaction_id()
+        name = self._get_question_domain()[0]
+        print(name)
+        #type
+        #time_to_live
+        #record
+        #flags = self._get_flags()
+
 
     def _get_transaction_id(self) -> list:
         """Returned id of dns message
@@ -39,6 +45,38 @@ class DNSMessage():
         """
         return self._message[:2]
 
+    def _get_question_domain(self):
+        data = self._message[12:]
+        state = 0
+        expected_length = 0
+        domain_string = ''
+        domain_parts = []
+        x = 0
+        y = 0
+        for byte in data:
+            if state == 1:
+                if byte != 0:
+                    domain_string += chr(byte)
+                x += 1
+                if x == expected_length:
+                    domain_parts.append(domain_string)
+                    domain_string = ''
+                    state = 0
+                    x = 0
+                if byte == 0:
+                    domain_parts.append(domain_string)
+                    break
+            else:
+                state = 1
+                expected_length = byte
+            y += 1
+
+        question_type = data[y:y+2]
+        return (domain_parts, question_type)
+
+    #def _get_flags(self):
+    #    binary_flags = self._message[2:4]
+
     @property
     def message(self) -> bytearray:
         return self._message
@@ -46,8 +84,6 @@ class DNSMessage():
     @property
     def response(self):
         self._build_response()
-
-
 
 
 class UDPServer():
@@ -82,7 +118,13 @@ class UDPServer():
 
             print(data)
 
+            # Handle message
+
             dns_response = self._send_authority(message=data)
+            
+            message = DNSMessage(dns_response)
+
+
 
             self._socket.sendto(dns_response, addr)
 
@@ -99,5 +141,5 @@ class UDPServer():
 
 
 if __name__ == "__main__":
-    server = UDPServer('127.0.0.1', 53)
+    server = UDPServer()
     server.run()
