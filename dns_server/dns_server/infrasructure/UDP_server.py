@@ -34,7 +34,8 @@ class DNSMessage():
         #type
         #time_to_live
         #record
-        #flags = self._get_flags()
+        flags = self._get_flags()
+        print(flags)
 
 
     def _get_transaction_id(self) -> list:
@@ -74,8 +75,27 @@ class DNSMessage():
         question_type = data[y:y+2]
         return (domain_parts, question_type)
 
-    #def _get_flags(self):
-    #    binary_flags = self._message[2:4]
+
+    def _get_flags(self):
+        """Parse flags from incoming message 
+        and create new for answer"""
+        flags = self._message[2:4]
+        byte1 = bytes(flags[:1])
+        QR = '1'
+        OPCODE = ''
+        for bit in range(1, 5):
+            OPCODE += str(ord(byte1) & (1 << bit))
+        AA = '1'
+        TC = '0'
+        RD = '0'
+        # Byte 2
+        RA = '0'
+        Z = '000'
+        RCODE = '0000'
+
+        return int(
+            QR+OPCODE+AA+TC+RD, 2).to_bytes(1, byteorder='big')\
+            + int(RA+Z+RCODE, 2).to_bytes(1, byteorder='big')
 
     @property
     def message(self) -> bytearray:
@@ -84,6 +104,7 @@ class DNSMessage():
     @property
     def response(self):
         self._build_response()
+
 
 
 class UDPServer():
