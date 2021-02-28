@@ -15,6 +15,41 @@
 #sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 import socket
+import psycopg2
+import os
+import sys
+
+
+def singleton(cls):
+    instances = {}
+
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
+
+
+@singleton
+class DBConnector():
+
+    _connector = None
+
+    @property
+    def connector(self):
+        if not self._connector:
+            try:
+                self._connector = psycopg2.connect(
+                    f"dbname={os.environ.get('DBNAME')}" + 
+                    f"user={os.os.environ.get('USER')}" +
+                    f"host={os.environ.get('HOST')}" +
+                    f"password={os.environ.get('PASSWORD')}"
+                )
+            except Exception as exp:
+                print(exp)
+                self._connector = None
+        return self._connector
+            
 
 
 class DNSMessage():
