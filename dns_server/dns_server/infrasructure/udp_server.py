@@ -1,5 +1,6 @@
 import socket
 from dns_server.core.dns_message import DNSMessage
+from dns_server.core.dns_message_handler import DNSMessageHandler
 
 
 class UDPServer():
@@ -35,6 +36,9 @@ class UDPServer():
 
             print(data)
 
+            dns_message = DNSMessage()
+            dns_message_handler = DNSMessageHandler(dns_message)
+            dns_message_handler.create_message(data)
             # Handle message
 
             dns_response = self._send_authority(message=data)

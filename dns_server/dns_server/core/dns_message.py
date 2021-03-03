@@ -2,9 +2,9 @@ class DNSMessage():
     """Entity for dns message
     """
 
-    def __init__(self, dns_message):
-        self._message: bytearray = dns_message
-        self._responce: bytearray = self._build_response()
+    #def __init__(self, dns_message):
+    #    self._message: bytearray = dns_message
+    #    self._responce: bytearray = self._build_response()
 
     def _build_response(self):
         """Generate answer for dns query

@@ -1,7 +1,7 @@
 from db_connector import DBConnector
+from dns_server.core.requester_facade import RequesterFacade
 
-
-class DBRequester():
+class DBRequester(RequesterFacade):
 
     def __init__(self):
         self._connector = DBConnector().connector
