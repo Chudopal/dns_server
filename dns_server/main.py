@@ -1,4 +1,4 @@
-from dns_server.infrasructure.udp_server import UDPServer
+from dns_server.infrastructure.udp_server import UDPServer
 
 server = UDPServer()
 server.run()

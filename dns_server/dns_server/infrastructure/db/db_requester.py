@@ -1,4 +1,5 @@
-from db_connector import DBConnector
+from datetime import datetime
+from dns_server.infrastructure.db.db_connector import DBConnector
 from dns_server.core.requester_facade import RequesterFacade
 
 class DBRequester(RequesterFacade):
@@ -11,7 +12,8 @@ class DBRequester(RequesterFacade):
                 name VARCHAR(50),
                 record_type INTEGER,
                 time_to_live INTEGER,
-                record VARCHAR(20)
+                record VARCHAR(20),
+                time INTEGER
             );
             """
         )
@@ -29,13 +31,13 @@ class DBRequester(RequesterFacade):
 
     def add_record(self,
                    name: str,
-                   record_type: str,
+                   type: str,
                    time_to_live: int,
                    record: str):
         try:
             self._cursor.execute(
-                f""" INSERT INTO dns_record(name, record_type, time_to_live, record)
-                VALUES ('{name}', {record_type}, {time_to_live}, '{record}');
+                f""" INSERT INTO dns_record(name, record_type, time_to_live, record, time)
+                VALUES ('{name}', {type}, {time_to_live}, '{record}', {self._get_time()});
                 """
             )
         except Exception as exp:
@@ -51,15 +53,19 @@ class DBRequester(RequesterFacade):
                 f"""UPDATE dns_record SET
                 type={type},
                 time_to_live={time_to_live},
-                record='{record}'
+                record='{record}',
+                time={self._get_time()}
                 WHERE name='{name}';
                 """
             )
         except Exception as exp:
             print(exp)
 
-
-if __name__ == "__main__":
-    requester = DBRequester()
-    requester.add_record("site.com", 1, 1000, "123.123.23.23")
-    print(requester.get_record("site.com"))
+    @staticmethod
+    def _get_time():
+        return int(
+            datetime.timestamp(
+                datetime.now()
+            )
+        )
+    
