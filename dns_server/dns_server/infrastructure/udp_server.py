@@ -40,13 +40,9 @@ class UDPServer():
             requester = DBRequester()
             dns_message_handler = DNSMessageHandler(requester ,data)
             print(dns_message_handler.dns_message.name)
-            # Handle message
-
-            #dns_response = self._send_authority(message=data)
-
-            #message = DNSMessage(dns_response)
-
-            #self._socket.sendto(dns_response, addr)
+            print(dns_message_handler.dns_message.type)
+            response = dns_message_handler.response
+            self._socket.sendto(response, addr)
 
     def _send_authority(self, message):
         server_address = (self._dns_host, self._dns_port)

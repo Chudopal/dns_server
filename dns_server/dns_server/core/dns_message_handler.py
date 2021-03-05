@@ -1,13 +1,17 @@
 import socket
-from datetime import datetime 
+from datetime import datetime
 from dns_server.core.dns_message import DNSMessage
 from dns_server.core.requester_facade import RequesterFacade
+from configuration import (
+    DNS_HOST,
+    DNS_PORT,
+)
 
 
 class DNSMessageHandler():
 
-    def __init__(self, 
-                 requester: RequesterFacade, 
+    def __init__(self,
+                 requester: RequesterFacade,
                  data_record: bytes):
         self._requester: RequesterFacade = requester
         self._data_record: bytes = data_record
@@ -22,7 +26,9 @@ class DNSMessageHandler():
         """Configure basic dns message
         """
         self._dns_message = DNSMessage()
-        self._dns_message.name, self._dns_message.type = self._get_question_domain()
+        domain = self._get_question_domain()
+        self._dns_message.name = domain[0]
+        self._dns_message.type = int.from_bytes(domain[1], 'big')
         db_data = self._requester.get_record(
             self._dns_message
         )
@@ -34,15 +40,18 @@ class DNSMessageHandler():
         else:
             self._is_record_in_db = False
 
-    def get_response(self):
-        response: bytes = None
-        if self._verify_time():
-            response = self._build_response()
+    @property
+    def response(self):
+        dns_response: bytes = None
+        if self._is_record_in_db and self._verify_time():
+            dns_response = self._build_response()
+            self._save()
         else:
-            response = self._make_authority_request()
-            self._data_record = response
+            dns_response = self._make_authority_request()
+            self._data_record = dns_response
             self._create_message()
-        return response
+            self._update()
+        return dns_response
 
     def _build_response(self):
         pass
@@ -59,12 +68,12 @@ class DNSMessageHandler():
             return False
         else:
             return True
-        
+
     def _make_authority_request(self):
-        server_address = (self._dns_host, self._dns_port)
+        server_address = (DNS_HOST, DNS_PORT)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            sock.sendto(self._dns_message, server_address)
+            sock.sendto(self._data_record, server_address)
             data, _ = sock.recvfrom(512)
         finally:
             sock.close()
@@ -100,17 +109,17 @@ class DNSMessageHandler():
         return (".".join(domain_parts), question_type)
 
     def _save(self):
-        if self._is_record_in_db:
-            self._requester.update_record(
-                name=self._dns_message.name,
-                type=self._dns_message.type,
-                time_to_live=self._dns_message.time_to_live,
-                record=self._dns_message.record
-            )
-        else:
-            self._requester.add_record(
-                name=self._dns_message.name,
-                type=self._dns_message.type,
-                time_to_live=self._dns_message.time_to_live,
-                record=self._dns_message.record
-            )
+        self._requester.update_record(
+            name=self._dns_message.name,
+            type=self._dns_message.type,
+            time_to_live=self._dns_message.time_to_live,
+            record=self._dns_message.record
+        )
+
+    def _update(self):
+        self._requester.add_record(
+            name=self._dns_message.name,
+            type=self._dns_message.type,
+            time_to_live=self._dns_message.time_to_live,
+            record=self._dns_message.record
+        )
