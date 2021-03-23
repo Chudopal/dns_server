@@ -10,6 +10,7 @@ class DNSMessage():
         """
         # Transaction ID
         transaction_id = self._get_transaction_id()
+        flags = self._get_flags()
 
     def _get_transaction_id(self) -> list:
         """Returned id of dns message
@@ -18,6 +19,9 @@ class DNSMessage():
             list: 2 bytes for transaction id
         """
         return self._message[:2]
+
+    def _get_flags(self):
+        pass
 
     @property
     def message(self) -> bytearray:
