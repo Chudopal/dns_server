@@ -10,16 +10,102 @@
 #import os
 #
 #PACKAGE_PARENT = '..'
-#SCRIPT_DIR = os.path.dirname(os.path.realpath(
+# SCRIPT_DIR = os.path.dirname(os.path.realpath(
 #    os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 #sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 import socket
+import psycopg2
+import os
+import sys
+
+
+def singleton(cls):
+    instances = {}
+
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
+
+
+@singleton
+class DBConnector():
+
+    _connector = None
+    _cursor = None
+
+    @property
+    def connector(self):
+        if not self._connector:
+            try:
+                self._connector = psycopg2.connect(
+                    f"dbname={os.environ.get('DBNAME')}" +
+                    f"user={os.os.environ.get('USER')}" +
+                    f"host={os.environ.get('HOST')}" +
+                    f"password={os.environ.get('PASSWORD')}"
+                )
+                self._connector.autocommit = True
+            except Exception as exp:
+                print(exp)
+                self._connector = None
+        return self._connector
+
+
+class BDRequester():
+
+    def __init__(self):
+        self._connector = DBConnector().connector
+        self._cursor = self._connector.cursor()
+
+    def get_record(self, name: str):
+        try:
+            self._cursor.execute(
+                f"""SELECT * FROM dns_records 
+                WHERE name={name};
+                """
+            )
+        except Exception as exp:
+            print(Exception)
+        return self._cursor.fetchall()
+
+    def add_record(self,
+                   name: str,
+                   record_type: str,
+                   time_to_live: int,
+                   record: str):
+        try:
+            self._cursor.execute(
+                f""" INSERT INTO dns_records(name, record_type, time_to_live, record)
+                VALUES ({name}, {record_type}, {time_to_live}, {record});
+                """
+            )
+        except Exception as exp:
+            print(exp)
+
+    def update_record(self,
+                      name: str,
+                      type: str,
+                      time_to_live: int,
+                      record: str):
+        try:
+            self._cursor.execute(
+                f"""UPDATE dns_records SET
+                type={type},
+                time_to_live={time_to_live},
+                record={record}
+                WHERE name={name};
+                """
+            )
+        except Exception as exp:
+            print(exp)
 
 
 class DNSMessage():
     """Entity for dns message
     """
+
     def __init__(self, dns_message):
         self._message: bytearray = dns_message
         self._responce: bytearray = self._build_response()
@@ -31,12 +117,11 @@ class DNSMessage():
         transaction_id = self._get_transaction_id()
         name = self._get_question_domain()[0]
         print(name)
-        #type
-        #time_to_live
-        #record
+        # type
+        # time_to_live
+        # record
         flags = self._get_flags()
         print(flags)
-
 
     def _get_transaction_id(self) -> list:
         """Returned id of dns message
@@ -75,7 +160,6 @@ class DNSMessage():
         question_type = data[y:y+2]
         return (domain_parts, question_type)
 
-
     def _get_flags(self):
         """Parse flags from incoming message 
         and create new for answer"""
@@ -93,8 +177,7 @@ class DNSMessage():
         Z = '000'
         RCODE = '0000'
 
-        return int(
-            QR+OPCODE+AA+TC+RD, 2).to_bytes(1, byteorder='big')\
+        return int(QR+OPCODE+AA+TC+RD, 2).to_bytes(1, byteorder='big')\
             + int(RA+Z+RCODE, 2).to_bytes(1, byteorder='big')
 
     @property
@@ -106,11 +189,11 @@ class DNSMessage():
         self._build_response()
 
 
-
 class UDPServer():
     """ UDP server for receiving and sending 
     messages to DNS authority server
     """
+
     def __init__(self,
                  host: str = '127.0.0.1',
                  port: int = 53,
@@ -142,10 +225,8 @@ class UDPServer():
             # Handle message
 
             dns_response = self._send_authority(message=data)
-            
+
             message = DNSMessage(dns_response)
-
-
 
             self._socket.sendto(dns_response, addr)
 
@@ -158,7 +239,6 @@ class UDPServer():
         finally:
             sock.close()
         return data
-
 
 
 if __name__ == "__main__":
